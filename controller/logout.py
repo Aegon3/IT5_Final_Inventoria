@@ -13,7 +13,7 @@ class InventoryControllerWithLogout:
         self.view = view
         self.db_config = db_config
         self.model.add_observer(self)
-        self._connec_signals()
+        self._connect_signals()
         self.update()
 
     def _connect_signals(self):

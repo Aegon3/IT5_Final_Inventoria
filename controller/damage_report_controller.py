@@ -1,7 +1,6 @@
 """
 Damage Report - Controller
 Handles ALL damage report database operations.
-NO QMessageBox imports - All UI alerts delegated to view.
 """
 
 from model.damage_report_model import DamageReport
@@ -9,10 +8,6 @@ from model.database import DatabaseHandler
 
 
 class DamageReportController:
-    """
-    Controller for damage report operations.
-    Handles ALL database operations - NO logic in models.
-    """
 
     def __init__(self, inventory_model, view, db_config, username):
         self.inventory_model = inventory_model

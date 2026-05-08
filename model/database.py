@@ -1,6 +1,6 @@
 """
 Database Handler for Inventoria
-Low-level database operations - This file is allowed to have if statements and try/catch.
+Low-level database operations - This file is allowed to have conditionals.
 """
 
 import mysql.connector

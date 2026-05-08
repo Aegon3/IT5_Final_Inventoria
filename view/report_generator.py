@@ -1,7 +1,5 @@
 """
 Inventoria - Report Dialog (View only)
-Place in: view/report_generator.py
-ReportGenerator logic has been moved to model/report_model.py
 """
 
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
@@ -10,10 +8,7 @@ from PyQt6.QtCore import Qt, QDate
 import os
 
 
-
 class ReportDialog(QDialog):
-    """View-only dialog for report generation. Collects inputs and emits signals."""
-
     def __init__(self, parent=None, db_config=None):
         super().__init__(parent)
         self.db_config = db_config
@@ -101,13 +96,11 @@ class ReportDialog(QDialog):
         layout.addWidget(self.status_label)
 
     def toggle_date_filter(self, state):
-        """Enable/disable date pickers — pure UI toggle."""
         enabled = (state == 2)
         self.start_date.setEnabled(enabled)
         self.end_date.setEnabled(enabled)
 
     def on_report_type_changed(self, text):
-        """Update UI state based on report type — pure display logic."""
         if text == "Low Stock Only":
             self.include_low_stock_check.setEnabled(False)
             self.include_low_stock_check.setText("Low Stock Only (already filtered)")
@@ -126,7 +119,6 @@ class ReportDialog(QDialog):
             self.category_combo.setCurrentIndex(0)
 
     def _on_generate_clicked(self):
-        """Gather inputs and pass to controller via callback — no generation logic here."""
         params = {
             'report_type': self.report_type_combo.currentText(),
             'category': self.category_combo.currentText(),
@@ -138,17 +130,14 @@ class ReportDialog(QDialog):
             self._generate_callback(params)
 
     def _on_open_folder_clicked(self):
-        """Tell controller to open the reports folder."""
         if self._open_folder_callback:
             self._open_folder_callback()
 
     def set_callbacks(self, generate_callback, open_folder_callback):
-        """Controller injects its handler functions."""
         self._generate_callback = generate_callback
         self._open_folder_callback = open_folder_callback
 
     def show_result(self, success, message):
-        """Controller calls this to update the status label after generation."""
         if success:
             self.status_label.setText(f"Report generated: {message}")
             QMessageBox.information(self, "Success", f"Report generated successfully!\n\nSaved to:\n{message}")
@@ -157,5 +146,4 @@ class ReportDialog(QDialog):
             QMessageBox.critical(self, "Error", message)
 
     def show_folder_status(self, message):
-        """Controller calls this to update folder open status."""
         self.status_label.setText(message)

@@ -1,29 +1,6 @@
 """
 Stock Issuance - View
 UI tab and helper methods for the Stock Issuance feature.
-Place in: view/stock_issuance_view.py
-
-HOW TO USE IN view.py:
-    Add signal to InventoryView class:
-        stock_issuance_signal = pyqtSignal(int, str, int, str, str)  # item_id, item_name, quantity, department, notes
-
-    In setup_ui() for staff:
-        if self.user_role == "staff":
-            from view.stock_issuance_view import create_stock_issuance_tab
-            self.tabs.addTab(create_stock_issuance_tab(self), "Stock Issuance")
-
-    Add helper methods to InventoryView:
-        def load_issuance_item_combo(self, items):
-            from view.stock_issuance_view import load_issuance_item_combo
-            load_issuance_item_combo(self, items)
-
-        def populate_issuance_table(self, issuances):
-            from view.stock_issuance_view import populate_issuance_table
-            populate_issuance_table(self, issuances)
-
-        def clear_issuance_form(self):
-            from view.stock_issuance_view import clear_issuance_form
-            clear_issuance_form(self)
 """
 
 from PyQt6.QtWidgets import (
@@ -36,20 +13,9 @@ from PyQt6.QtGui import QFont
 
 
 def create_stock_issuance_tab(view_instance):
-    """
-    Build and return the Stock Issuance tab widget.
-    Call this from InventoryView.setup_ui() for staff only.
-
-    Args:
-        view_instance: the InventoryView instance (self)
-
-    Returns:
-        QWidget: the complete tab widget
-    """
     tab = QWidget()
     layout = QVBoxLayout(tab)
 
-    #  Header
     title = QLabel("Stock Issuance")
     title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
     title.setStyleSheet("padding: 10px; color: #2C3E50;")
@@ -60,7 +26,6 @@ def create_stock_issuance_tab(view_instance):
     desc.setWordWrap(True)
     layout.addWidget(desc)
 
-    #  Form
     form_widget = QWidget()
     form_widget.setStyleSheet("""
         QWidget {
@@ -72,7 +37,6 @@ def create_stock_issuance_tab(view_instance):
     """)
     form_layout = QVBoxLayout(form_widget)
 
-    # Item selection
     item_row = QHBoxLayout()
     item_label = QLabel("Item:")
     item_label.setFixedWidth(120)
@@ -82,7 +46,6 @@ def create_stock_issuance_tab(view_instance):
     item_row.addWidget(view_instance.issuance_item_combo)
     form_layout.addLayout(item_row)
 
-    # Quantity
     qty_row = QHBoxLayout()
     qty_label = QLabel("Quantity:")
     qty_label.setFixedWidth(120)
@@ -94,7 +57,6 @@ def create_stock_issuance_tab(view_instance):
     qty_row.addStretch()
     form_layout.addLayout(qty_row)
 
-    # Notes
     notes_row = QHBoxLayout()
     notes_label = QLabel("Notes:")
     notes_label.setFixedWidth(120)
@@ -107,14 +69,12 @@ def create_stock_issuance_tab(view_instance):
 
     layout.addWidget(form_widget)
 
-    #  Submit button
     submit_btn = QPushButton("Issue Stock")
     submit_btn.setObjectName("adjust_btn")
     submit_btn.setFixedHeight(36)
     submit_btn.clicked.connect(lambda: _on_submit(view_instance))
     layout.addWidget(submit_btn)
 
-    #  Issuance history table
     table_label = QLabel("Issuance History")
     table_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
     table_label.setStyleSheet("padding: 10px 0 5px 0;")
@@ -135,13 +95,11 @@ def create_stock_issuance_tab(view_instance):
 
 
 def _on_submit(view_instance):
-    """Gather form values and emit signal — controller handles all validation."""
     item_id = view_instance.issuance_item_combo.currentData()
     item_name = view_instance.issuance_item_combo.currentText()
     quantity = view_instance.issuance_qty_spin.value()
     notes = view_instance.issuance_notes_input.toPlainText()
 
-    # Strip stock info from display name
     if ' (Stock:' in item_name:
         item_name = item_name.split(' (Stock:')[0]
 
@@ -149,7 +107,6 @@ def _on_submit(view_instance):
 
 
 def load_issuance_item_combo(view_instance, items):
-    """Populate item combo box with current inventory items"""
     if not hasattr(view_instance, 'issuance_item_combo'):
         return
     view_instance.issuance_item_combo.clear()
@@ -161,7 +118,6 @@ def load_issuance_item_combo(view_instance, items):
 
 
 def populate_issuance_table(view_instance, issuances):
-    """Populate issuance history table with data"""
     if not hasattr(view_instance, 'issuance_table'):
         return
     view_instance.issuance_table.setRowCount(0)
@@ -183,7 +139,6 @@ def populate_issuance_table(view_instance, issuances):
 
 
 def clear_issuance_form(view_instance):
-    """Reset the issuance form after submission"""
     if hasattr(view_instance, 'issuance_item_combo'):
         view_instance.issuance_item_combo.setCurrentIndex(0)
     if hasattr(view_instance, 'issuance_qty_spin'):

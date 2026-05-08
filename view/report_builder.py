@@ -1,8 +1,7 @@
 """
-Inventoria - Report Builder
+Inventoria - Report Builder (View Layer)
 Handles ONLY PDF construction from raw data dicts.
-No DB, no UI, no PyQt6.
-Place in: model/report_builder.py
+Place in: view/report_builder.py
 """
 
 from datetime import datetime
@@ -16,17 +15,16 @@ import os
 
 REPORTS_DIR = "/Users/jbasquiat/Downloads/reports"
 
-HEADER_BG   = colors.HexColor('#2C3E50')
-ROW_EVEN    = colors.HexColor('#F8F9FA')
-ROW_ODD     = colors.white
-GRID        = colors.HexColor('#BDC3C7')
-LOW_STOCK_BG  = colors.HexColor('#FFEAA7')
+HEADER_BG = colors.HexColor('#2C3E50')
+ROW_EVEN = colors.HexColor('#F8F9FA')
+ROW_ODD = colors.white
+GRID = colors.HexColor('#BDC3C7')
+LOW_STOCK_BG = colors.HexColor('#FFEAA7')
 LOW_STOCK_TXT = colors.HexColor('#D35400')
 
 
 def _ensure_dir():
-    if not os.path.exists(REPORTS_DIR):
-        os.makedirs(REPORTS_DIR)
+    os.makedirs(REPORTS_DIR, exist_ok=True)
 
 
 def _base_styles():
@@ -61,9 +59,7 @@ def _base_table_style():
     ])
 
 
-def build_inventory_pdf(items, report_type, category, include_low_stock,
-                        start_date, end_date):
-    """Build inventory PDF from raw item rows. Returns filepath."""
+def build_inventory_pdf(items, report_type, category, include_low_stock, start_date, end_date):
     _ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filepath = os.path.join(REPORTS_DIR, f"inventory_report_{timestamp}.pdf")
@@ -85,9 +81,9 @@ def build_inventory_pdf(items, report_type, category, include_low_stock,
     elements.append(Paragraph(type_info, styles['Normal']))
     elements.append(Spacer(1, 10))
 
-    total_qty   = sum(i['quantity'] for i in items)
-    total_val   = sum(i['quantity'] * float(i['unit_price']) for i in items)
-    low_count   = sum(1 for i in items if i['quantity'] < i['min_stock'])
+    total_qty = sum(i['quantity'] for i in items)
+    total_val = sum(i['quantity'] * float(i['unit_price']) for i in items)
+    low_count = len([i for i in items if i['quantity'] < i['min_stock']])
     elements.append(Paragraph(
         f"<b>Statistics:</b><br/>"
         f"Total Items: {len(items)}<br/>"
@@ -102,15 +98,17 @@ def build_inventory_pdf(items, report_type, category, include_low_stock,
     for item in items:
         item_total = item['quantity'] * float(item['unit_price'])
         status = "LOW" if item['quantity'] < item['min_stock'] else "OK"
+        item_name_display = item['name'][:25] + "..." if len(item['name']) > 25 else item['name']
+        supplier_display = (item['supplier'] or "")[:18] + "..." if len(item['supplier'] or "") > 18 else (item['supplier'] or "")
         table_data.append([
             str(item['id']),
-            item['name'][:25] + "..." if len(item['name']) > 25 else item['name'],
+            item_name_display,
             item['category'][:12],
             str(item['quantity']),
             str(item['min_stock']),
             f"PHP {float(item['unit_price']):.2f}",
             f"PHP {item_total:.2f}",
-            (item['supplier'] or "")[:18] + "..." if len(item['supplier'] or "") > 18 else (item['supplier'] or ""),
+            supplier_display,
             status
         ])
 
@@ -119,13 +117,6 @@ def build_inventory_pdf(items, report_type, category, include_low_stock,
     table.setStyle(_base_table_style())
     table.setStyle(TableStyle([('ALIGN', (0, 1), (0, -1), 'LEFT'), ('ALIGN', (1, 1), (1, -1), 'LEFT'),
                                 ('ALIGN', (7, 1), (7, -1), 'LEFT'), ('ALIGN', (5, 1), (6, -1), 'RIGHT')]))
-    for i, item in enumerate(items, start=1):
-        if item['quantity'] < item['min_stock']:
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, i), (-1, i), LOW_STOCK_BG),
-                ('TEXTCOLOR', (0, i), (-1, i), LOW_STOCK_TXT),
-                ('FONTNAME', (0, i), (-1, i), 'Helvetica-Bold'),
-            ]))
 
     elements.append(table)
     elements.append(Spacer(1, 10))
@@ -135,7 +126,6 @@ def build_inventory_pdf(items, report_type, category, include_low_stock,
 
 
 def build_category_pdf(rows):
-    """Build category summary PDF from raw category rows. Returns filepath."""
     _ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filepath = os.path.join(REPORTS_DIR, f"category_summary_{timestamp}.pdf")
@@ -147,30 +137,31 @@ def build_category_pdf(rows):
     elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
     elements.append(Spacer(1, 20))
 
-    if rows:
-        table_data = [['Category', 'Items', 'Total Qty', 'Total Value', 'Low Stock']]
-        for r in rows:
-            table_data.append([
-                r['category'], str(r['item_count']), str(r['total_quantity']),
-                f"PHP {r['total_value'] or 0:,.2f}", str(r['low_stock_count'])
-            ])
-        col_widths = [4.5*cm, 2.5*cm, 3.0*cm, 4.0*cm, 2.5*cm]
-        table = Table(table_data, colWidths=col_widths)
-        style = _base_table_style()
-        style.add('ALIGN', (0, 1), (0, -1), 'LEFT')
-        style.add('ALIGN', (3, 1), (3, -1), 'RIGHT')
-        style.add('FONTSIZE', (0, 0), (-1, 0), 11)
-        style.add('BOTTOMPADDING', (0, 0), (-1, 0), 10)
-        style.add('TOPPADDING', (0, 0), (-1, 0), 8)
-        style.add('FONTSIZE', (0, 1), (-1, -1), 10)
-        table.setStyle(style)
-        elements.append(table)
-    else:
-        elements.append(Paragraph("No categories found.", styles['Normal']))
+    table_data = [['Category', 'Items', 'Total Qty', 'Total Value', 'Low Stock']]
+    for r in rows:
+        table_data.append([
+            r.get('category', 'Unknown'),
+            str(r.get('item_count', 0)),
+            str(r.get('total_quantity', 0)),
+            f"PHP {r.get('total_value', 0) or 0:,.2f}",
+            str(r.get('low_stock_count', 0))
+        ])
 
-    total_items     = sum(r['item_count'] for r in rows)
-    total_value     = sum(r['total_value'] or 0 for r in rows)
-    total_low_stock = sum(r['low_stock_count'] for r in rows)
+    col_widths = [4.5*cm, 2.5*cm, 3.0*cm, 4.0*cm, 2.5*cm]
+    table = Table(table_data, colWidths=col_widths)
+    style = _base_table_style()
+    style.add('ALIGN', (0, 1), (0, -1), 'LEFT')
+    style.add('ALIGN', (3, 1), (3, -1), 'RIGHT')
+    style.add('FONTSIZE', (0, 0), (-1, 0), 11)
+    style.add('BOTTOMPADDING', (0, 0), (-1, 0), 10)
+    style.add('TOPPADDING', (0, 0), (-1, 0), 8)
+    style.add('FONTSIZE', (0, 1), (-1, -1), 10)
+    table.setStyle(style)
+    elements.append(table)
+
+    total_items = sum(r.get('item_count', 0) for r in rows)
+    total_value = sum(r.get('total_value', 0) or 0 for r in rows)
+    total_low_stock = sum(r.get('low_stock_count', 0) for r in rows)
     elements.append(Spacer(1, 20))
     elements.append(Paragraph(
         f"<b>Summary:</b><br/>"
@@ -184,9 +175,7 @@ def build_category_pdf(rows):
     return filepath
 
 
-
 def build_damage_report_pdf(rows, start_date=None, end_date=None):
-    """Build damage report PDF from raw damage report rows. Returns filepath."""
     _ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filepath = os.path.join(REPORTS_DIR, f"damage_report_{timestamp}.pdf")
@@ -200,7 +189,7 @@ def build_damage_report_pdf(rows, start_date=None, end_date=None):
         elements.append(Paragraph(f"Date Range: {start_date} to {end_date}", header_style))
     elements.append(Spacer(1, 15))
 
-    total_qty = sum(r['quantity'] for r in rows)
+    total_qty = sum(r.get('quantity', 0) for r in rows)
     elements.append(Paragraph(
         f"<b>Summary:</b><br/>"
         f"Total Damage Reports: {len(rows)}<br/>"
@@ -211,13 +200,13 @@ def build_damage_report_pdf(rows, start_date=None, end_date=None):
 
     table_data = [['Date Reported', 'Item Name', 'Quantity', 'Reason', 'Reported By']]
     for r in rows:
-        reported_date = r['reported_date'].strftime('%Y-%m-%d %H:%M') if r['reported_date'] else 'N/A'
+        reported_date = r['reported_date'].strftime('%Y-%m-%d %H:%M') if r.get('reported_date') else 'N/A'
         table_data.append([
             reported_date,
-            (r['item_name'] or '')[:30],
-            str(r['quantity']),
-            (r['reason'] or '')[:40],
-            r['reported_by'] or '',
+            (r.get('item_name', '') or '')[:30],
+            str(r.get('quantity', 0)),
+            (r.get('reason', '') or '')[:40],
+            r.get('reported_by', '') or ''
         ])
 
     col_widths = [3.5*cm, 6.0*cm, 2.0*cm, 10.0*cm, 3.5*cm]
@@ -237,7 +226,6 @@ def build_damage_report_pdf(rows, start_date=None, end_date=None):
 
 
 def build_stock_issuance_pdf(rows, start_date=None, end_date=None):
-    """Build stock issuance PDF from raw issuance rows. Returns filepath."""
     _ensure_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filepath = os.path.join(REPORTS_DIR, f"stock_issuance_report_{timestamp}.pdf")
@@ -251,8 +239,8 @@ def build_stock_issuance_pdf(rows, start_date=None, end_date=None):
         elements.append(Paragraph(f"Date Range: {start_date} to {end_date}", header_style))
     elements.append(Spacer(1, 15))
 
-    total_qty = sum(r['quantity'] for r in rows)
-    total_val = sum(float(r['total_value'] or 0) for r in rows)
+    total_qty = sum(r.get('quantity', 0) for r in rows)
+    total_val = sum(float(r.get('total_value', 0) or 0) for r in rows)
     elements.append(Paragraph(
         f"<b>Summary:</b><br/>"
         f"Total Issuances: {len(rows)}<br/>"
@@ -264,13 +252,16 @@ def build_stock_issuance_pdf(rows, start_date=None, end_date=None):
 
     table_data = [['Date', 'Item Name', 'Category', 'Qty', 'Unit Price', 'Total Value', 'Issued By', 'Notes']]
     for r in rows:
-        issued_date = r['issued_date'].strftime('%Y-%m-%d %H:%M') if r['issued_date'] else 'N/A'
+        issued_date = r['issued_date'].strftime('%Y-%m-%d %H:%M') if r.get('issued_date') else 'N/A'
         table_data.append([
-            issued_date, (r['item_name'] or '')[:25], (r['category'] or 'N/A'),
-            str(r['quantity']),
-            f"PHP {float(r['unit_price'] or 0):.2f}",
-            f"PHP {float(r['total_value'] or 0):.2f}",
-            r['issued_by'] or '', (r['notes'] or '')[:20],
+            issued_date,
+            (r.get('item_name', '') or '')[:25],
+            (r.get('category', '') or 'N/A'),
+            str(r.get('quantity', 0)),
+            f"PHP {float(r.get('unit_price', 0) or 0):.2f}",
+            f"PHP {float(r.get('total_value', 0) or 0):.2f}",
+            r.get('issued_by', '') or '',
+            (r.get('notes', '') or '')[:20]
         ])
 
     col_widths = [3.5*cm, 5.0*cm, 2.8*cm, 1.5*cm, 2.5*cm, 3.0*cm, 2.8*cm, 4.0*cm]

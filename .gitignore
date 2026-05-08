@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.idea/
+*.db
+inventoria.jpeg
+.DS_Store

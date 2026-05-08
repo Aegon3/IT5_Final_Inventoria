@@ -1,7 +1,6 @@
 """
 Stock Issuance - Controller
 Handles ALL stock issuance database operations.
-NO QMessageBox imports - All UI alerts delegated to view.
 """
 
 from model.stock_issuance_model import StockIssuance
@@ -9,10 +8,6 @@ from model.database import DatabaseHandler
 
 
 class StockIssuanceController:
-    """
-    Controller for stock issuance operations.
-    Handles ALL database operations - NO logic in models.
-    """
 
     def __init__(self, inventory_model, view, db_config, username):
         self.inventory_model = inventory_model

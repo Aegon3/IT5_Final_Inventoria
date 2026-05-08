@@ -1,7 +1,6 @@
 """
 Inventoria - KPI Controller
-Handles all KPI / statistics logic, keeping it out of the view.
-NO QMessageBox imports.
+Handles all KPI / statistics logic.
 """
 
 

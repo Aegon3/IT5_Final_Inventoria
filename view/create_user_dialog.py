@@ -1,6 +1,5 @@
 """
 Inventoria - Create User Dialog (Admin Only)
-Allows admin users to create new user accounts and view all existing users
 """
 
 from PyQt6.QtWidgets import (
@@ -13,36 +12,29 @@ from PyQt6.QtGui import QFont
 
 
 class CreateUserDialog(QDialog):
-    """Dialog for admin to create new users and view all users"""
-
     def __init__(self, parent, db=None, user_controller=None):
         super().__init__(parent)
         self.user_controller = user_controller
-
         self.setWindowTitle("User Management")
         self.setMinimumSize(900, 600)
         self.setModal(True)
-
         self.setup_ui()
         self.load_users()
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
 
-        # Title
         title = QLabel(" USER MANAGEMENT")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         title.setStyleSheet("margin-bottom: 15px; color: #2C3E50;")
         layout.addWidget(title)
 
-        # Create tabs
         tabs = QTabWidget()
         tabs.addTab(self._create_new_user_tab(), " Create New User")
         tabs.addTab(self._create_view_users_tab(), " View All Users")
         layout.addWidget(tabs)
 
-        # Close button
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.reject)
         close_btn.setFixedWidth(100)
@@ -52,44 +44,36 @@ class CreateUserDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _create_new_user_tab(self):
-        """Create the tab for adding new users"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # Form
         form = QFormLayout()
 
-        # Username
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Enter username (unique)")
         form.addRow("Username:", self.username_input)
 
-        # Full Name
         self.fullname_input = QLineEdit()
         self.fullname_input.setPlaceholderText("Enter full name")
         form.addRow("Full Name:", self.fullname_input)
 
-        # Password
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("Enter password")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow("Password:", self.password_input)
 
-        # Confirm Password
         self.confirm_password_input = QLineEdit()
         self.confirm_password_input.setPlaceholderText("Confirm password")
         self.confirm_password_input.setEchoMode(QLineEdit.EchoMode.Password)
         form.addRow("Confirm Password:", self.confirm_password_input)
 
-        # Role
         self.role_combo = QComboBox()
         self.role_combo.addItems(["staff", "admin"])
-        self.role_combo.setCurrentText("staff")  # Default to staff
+        self.role_combo.setCurrentText("staff")
         form.addRow("Role:", self.role_combo)
 
         layout.addLayout(form)
 
-        # Info label
         info_label = QLabel(" Tip: Staff can manage inventory, Admin can manage everything including users.")
         info_label.setWordWrap(True)
         info_label.setStyleSheet("font-size: 10px; color: #666; margin-top: 10px;")
@@ -97,7 +81,6 @@ class CreateUserDialog(QDialog):
 
         layout.addStretch()
 
-        # Create button
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -112,17 +95,14 @@ class CreateUserDialog(QDialog):
         return tab
 
     def _create_view_users_tab(self):
-        """Create the tab for viewing all users"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # Info label
         info_label = QLabel(" All registered users in the system:")
         info_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
         info_label.setStyleSheet("margin-bottom: 10px;")
         layout.addWidget(info_label)
 
-        # Users table
         self.users_table = QTableWidget()
         self.users_table.setColumnCount(5)
         self.users_table.setHorizontalHeaderLabels([
@@ -136,7 +116,6 @@ class CreateUserDialog(QDialog):
         self.users_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         layout.addWidget(self.users_table)
 
-        # Refresh button
         refresh_btn = QPushButton(" Refresh")
         refresh_btn.clicked.connect(self.load_users)
         refresh_btn.setFixedWidth(100)
@@ -148,7 +127,6 @@ class CreateUserDialog(QDialog):
         return tab
 
     def load_users(self):
-        """Load all users via UserController — no direct DB access in the View."""
         try:
             users = self.user_controller.get_all_users()
             self.users_table.setRowCount(0)
@@ -157,16 +135,10 @@ class CreateUserDialog(QDialog):
                 row = self.users_table.rowCount()
                 self.users_table.insertRow(row)
 
-                # ID
                 self.users_table.setItem(row, 0, QTableWidgetItem(str(user['id'])))
-
-                # Username
                 self.users_table.setItem(row, 1, QTableWidgetItem(user['username']))
-
-                # Full Name
                 self.users_table.setItem(row, 2, QTableWidgetItem(user['full_name']))
 
-                # Role with color coding
                 role_item = QTableWidgetItem(user['role'].upper())
                 if user['role'] == 'admin':
                     role_item.setForeground(Qt.GlobalColor.red)
@@ -174,14 +146,12 @@ class CreateUserDialog(QDialog):
                     role_item.setForeground(Qt.GlobalColor.blue)
                 self.users_table.setItem(row, 3, role_item)
 
-                # Actions - Delete button (except for default admin/staff)
                 self.users_table.setRowHeight(row, 38)
                 actions_widget = QWidget()
                 actions_layout = QHBoxLayout(actions_widget)
                 actions_layout.setContentsMargins(4, 4, 4, 4)
                 actions_layout.setSpacing(4)
 
-                # Only allow deletion of non-default users
                 if user['username'] not in ['admin', 'staff']:
                     delete_btn = QPushButton("Delete")
                     delete_btn.setFixedSize(90, 28)
@@ -196,19 +166,14 @@ class CreateUserDialog(QDialog):
                 actions_layout.addStretch()
                 self.users_table.setCellWidget(row, 4, actions_widget)
 
-            print(f" Loaded {len(users)} users")
-
         except Exception as e:
             QMessageBox.critical(self, "Database Error", f"Failed to load users:\n{str(e)}")
-            print(f" Error loading users: {e}")
 
     def delete_user(self, user_id, username):
-        """Delete a user via UserController."""
         reply = QMessageBox.question(
             self,
             "Confirm Delete",
-            f"Are you sure you want to delete user '{username}'?\n\n"
-            f"This action cannot be undone!",
+            f"Are you sure you want to delete user '{username}'?\n\nThis action cannot be undone!",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -222,7 +187,6 @@ class CreateUserDialog(QDialog):
                 QMessageBox.critical(self, "Error", message)
 
     def create_user(self):
-        """Gather inputs and delegate to UserController — no DB access in the View."""
         username = self.username_input.text().strip()
         fullname = self.fullname_input.text().strip()
         password = self.password_input.text()

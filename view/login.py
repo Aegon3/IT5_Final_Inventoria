@@ -1,6 +1,5 @@
 """
 Inventory Management System - Login Interface
-PROFESSIONAL GREY DESIGN - FULLY FIXED VERSION
 """
 
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
@@ -12,8 +11,6 @@ import os
 
 
 class LoginWindow(QDialog):
-    """Modern professional login with grey palette"""
-
     def __init__(self, db_config=None):
         super().__init__()
         self.authenticated = False
@@ -21,7 +18,6 @@ class LoginWindow(QDialog):
         self.user_data = None
         self.password_visible = False
 
-        # Create a UserController so the View never touches the DB directly
         from controller.user_controller import UserController
         self._user_controller = UserController(db_config or {
             'host': 'localhost',
@@ -35,13 +31,10 @@ class LoginWindow(QDialog):
         self.setup_ui()
 
     def setup_ui(self):
-        """Setup beautiful grey UI"""
-        # Main layout
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Apply background gradient
         self.setStyleSheet("""
             QDialog {
                 background: qlineargradient(
@@ -51,13 +44,11 @@ class LoginWindow(QDialog):
             }
         """)
 
-        # Center container
         center_widget = QWidget()
         center_layout = QVBoxLayout(center_widget)
         center_layout.setContentsMargins(50, 40, 50, 40)
         center_layout.setSpacing(25)
 
-        # Logo
         logo_label = QLabel()
         logo_path = "inventoria.jpeg"
         paths = [
@@ -87,7 +78,6 @@ class LoginWindow(QDialog):
         logo_label.setStyleSheet("margin-bottom: 10px;")
         center_layout.addWidget(logo_label)
 
-        # Title
         title = QLabel("INVENTORIA")
         title.setFont(QFont("Arial", 32, QFont.Weight.Bold))
         title.setStyleSheet("color: #2C3E50; margin: 0; padding: 0;")
@@ -100,7 +90,6 @@ class LoginWindow(QDialog):
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         center_layout.addWidget(subtitle)
 
-        # Login card
         card = QWidget()
         card.setStyleSheet("""
             QWidget {
@@ -112,7 +101,6 @@ class LoginWindow(QDialog):
         card_layout.setContentsMargins(30, 30, 30, 30)
         card_layout.setSpacing(15)
 
-        # Username section
         user_label = QLabel("Username")
         user_label.setFont(QFont("Arial", 11, QFont.Weight.DemiBold))
         user_label.setStyleSheet("color: #495057; background: transparent;")
@@ -140,16 +128,14 @@ class LoginWindow(QDialog):
 
         card_layout.addSpacing(10)
 
-        # Password section
         pass_label = QLabel("Password")
         pass_label.setFont(QFont("Arial", 11, QFont.Weight.DemiBold))
         pass_label.setStyleSheet("color: #495057; background: transparent;")
         card_layout.addWidget(pass_label)
 
-        # Password input with toggle button side by side
         password_container = QWidget()
         password_container.setStyleSheet("background: transparent; border: none;")
-        password_container.setMinimumHeight(45)  # Ensure container height
+        password_container.setMinimumHeight(45)
         password_layout = QHBoxLayout(password_container)
         password_layout.setContentsMargins(0, 0, 0, 0)
         password_layout.setSpacing(0)
@@ -175,7 +161,6 @@ class LoginWindow(QDialog):
         self.password_input.setFixedHeight(45)
         self.password_input.returnPressed.connect(self.handle_login)
 
-        # Toggle button - now properly positioned and clickable
         self.toggle_btn = QPushButton()
         self.toggle_btn.setFixedSize(45, 45)
         self.toggle_btn.setStyleSheet("""
@@ -200,19 +185,14 @@ class LoginWindow(QDialog):
         self.toggle_btn.clicked.connect(self.toggle_password_visibility)
         self.update_toggle_icon()
 
-        password_layout.addWidget(self.password_input, 1)  # Give password input stretch factor
-        password_layout.addWidget(self.toggle_btn, 0)  # No stretch for button
-        password_layout.setStretch(0, 1)  # Password input gets priority
-        password_layout.setStretch(1, 0)  # Button stays fixed
+        password_layout.addWidget(self.password_input, 1)
+        password_layout.addWidget(self.toggle_btn, 0)
+        password_layout.setStretch(0, 1)
+        password_layout.setStretch(1, 0)
 
         card_layout.addWidget(password_container)
-
         card_layout.addSpacing(10)
 
-        # Info box - now with proper text display
-
-
-        # Buttons
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(12)
 
@@ -266,7 +246,6 @@ class LoginWindow(QDialog):
 
         center_layout.addWidget(card)
 
-        # Footer
         footer = QLabel("© Bernett's Inventoria System")
         footer.setFont(QFont("Arial", 10))
         footer.setStyleSheet("color: #868E96; margin-top: 15px; background: transparent;")
@@ -280,21 +259,16 @@ class LoginWindow(QDialog):
         self.username_input.setFocus()
 
     def update_toggle_icon(self):
-        """Update the toggle button icon"""
-        # Create SVG icon for eye or eye-slash
         if self.password_visible:
-            # Eye-slash icon (password visible)
             svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="#6C757D">
                 <path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zm151 118.3C226 97.7 269.5 80 320 80c65.2 0 118.8 29.6 159.9 67.7C518.4 183.5 545 226 558.6 256c-12.6 28-36.6 66.8-70.9 100.9l-53.8-42.2c9.1-17.6 14.2-37.5 14.2-58.7c0-70.7-57.3-128-128-128c-32.2 0-61.7 11.9-84.2 31.5l-46.1-36.1zM394.9 284.2l-81.5-63.9c4.2-8.5 6.6-18.2 6.6-28.3c0-5.5-.7-10.9-2-16c.7 0 1.3 0 2 0c44.2 0 80 35.8 80 80c0 9.9-1.8 19.4-5.1 28.2zm9.4 130.3C378.8 425.4 350.7 432 320 432c-65.2 0-118.8-29.6-159.9-67.7C121.6 328.5 95 286 81.4 256c8.3-18.4 21.5-41.5 39.4-64.8L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5l-41.9-33zM192 256c0 70.7 57.3 128 128 128c13.3 0 26.1-2 38.2-5.8L302 334c-23.5-5.4-43.1-21.2-53.7-42.3l-56.1-44.2c-.2 2.8-.3 5.6-.3 8.5z"/>
             </svg>'''
         else:
-            # Eye icon (password hidden)
             svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#6C757D">
                 <path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"/>
             </svg>'''
 
         try:
-            # Create pixmap from SVG
             svg_bytes = svg.encode('utf-8')
             from PyQt6.QtCore import QByteArray
             pixmap = QPixmap(20, 20)
@@ -310,24 +284,18 @@ class LoginWindow(QDialog):
             self.toggle_btn.setIcon(icon)
             self.toggle_btn.setIconSize(pixmap.size())
         except Exception as e:
-            # Fallback to text if SVG fails
             self.toggle_btn.setText("" if not self.password_visible else "")
 
     def toggle_password_visibility(self):
-        """Toggle password visibility"""
         if self.password_visible:
-            # Hide password
             self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
             self.password_visible = False
         else:
-            # Show password
             self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
             self.password_visible = True
-
         self.update_toggle_icon()
 
     def handle_login(self):
-        """Handle login"""
         username = self.username_input.text().strip()
         password = self.password_input.text().strip()
 
@@ -345,7 +313,6 @@ class LoginWindow(QDialog):
             self.authenticated = True
             self.username = username
 
-            # Show welcome message with role info
             role = self.user_data.get('role', 'staff').upper()
             full_name = self.user_data.get('full_name', username)
 
@@ -364,13 +331,11 @@ class LoginWindow(QDialog):
             error_msg += "• Username: admin\n"
             error_msg += "• Password: admin\n\n"
 
-
             self.show_message("Login Failed", error_msg, QMessageBox.Icon.Critical)
             self.password_input.clear()
             self.password_input.setFocus()
 
     def show_message(self, title, message, icon):
-        """Show styled message box"""
         msg = QMessageBox(self)
         msg.setIcon(icon)
         msg.setWindowTitle(title)
@@ -401,7 +366,6 @@ class LoginWindow(QDialog):
         msg.exec()
 
     def authenticate(self, username, password):
-        """Delegate authentication to UserController — View never touches the DB."""
         success, user_data, error = self._user_controller.authenticate(username, password)
         if success:
             self.user_data = user_data

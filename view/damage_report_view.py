@@ -1,18 +1,6 @@
 """
 Damage Report - View
 UI tab and helper methods for the Damage Report feature.
-Place in: view/damage_report_view.py
-
-HOW TO USE IN view.py:
-    from view.damage_report_view import DamageReportView
-    mixin = DamageReportView()
-
-    Then in setup_ui() add the tab for staff:
-        if self.user_role == "staff":
-            self.tabs.addTab(mixin.create_damage_report_tab(self), "Damage Report")
-
-    Add the signal to InventoryView:
-        damage_report_signal = pyqtSignal(int, str, int, str)
 """
 
 from PyQt6.QtWidgets import (
@@ -25,20 +13,9 @@ from PyQt6.QtGui import QFont
 
 
 def create_damage_report_tab(view_instance):
-    """
-    Build and return the Damage Report tab widget.
-    Call this from InventoryView.setup_ui() for staff only.
-
-    Args:
-        view_instance: the InventoryView instance (self)
-
-    Returns:
-        QWidget: the complete tab widget
-    """
     tab = QWidget()
     layout = QVBoxLayout(tab)
 
-    #  Header
     title = QLabel("Damage Report")
     title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
     title.setStyleSheet("padding: 10px; color: #E74C3C;")
@@ -49,7 +26,6 @@ def create_damage_report_tab(view_instance):
     desc.setWordWrap(True)
     layout.addWidget(desc)
 
-    #  Form
     form_widget = QWidget()
     form_widget.setStyleSheet("""
         QWidget {
@@ -61,7 +37,6 @@ def create_damage_report_tab(view_instance):
     """)
     form_layout = QVBoxLayout(form_widget)
 
-    # Item selection
     item_row = QHBoxLayout()
     item_label = QLabel("Item:")
     item_label.setFixedWidth(110)
@@ -71,7 +46,6 @@ def create_damage_report_tab(view_instance):
     item_row.addWidget(view_instance.damage_item_combo)
     form_layout.addLayout(item_row)
 
-    # Quantity
     qty_row = QHBoxLayout()
     qty_label = QLabel("Quantity:")
     qty_label.setFixedWidth(110)
@@ -83,7 +57,6 @@ def create_damage_report_tab(view_instance):
     qty_row.addStretch()
     form_layout.addLayout(qty_row)
 
-    # Reason
     reason_row = QHBoxLayout()
     reason_label = QLabel("Reason:")
     reason_label.setFixedWidth(110)
@@ -99,14 +72,12 @@ def create_damage_report_tab(view_instance):
 
     layout.addWidget(form_widget)
 
-    #  Submit button
     submit_btn = QPushButton("Submit Damage Report")
     submit_btn.setObjectName("request_btn")
     submit_btn.setFixedHeight(36)
     submit_btn.clicked.connect(lambda: _on_submit(view_instance))
     layout.addWidget(submit_btn)
 
-    #  Reports table
     table_label = QLabel("Submitted Damage Reports")
     table_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
     table_label.setStyleSheet("padding: 10px 0 5px 0;")
@@ -129,13 +100,11 @@ def create_damage_report_tab(view_instance):
 
 
 def _on_submit(view_instance):
-    """Gather form values and emit signal — controller handles all validation."""
     item_id = view_instance.damage_item_combo.currentData()
     item_name = view_instance.damage_item_combo.currentText()
     quantity = view_instance.damage_qty_spin.value()
     reason = view_instance.damage_reason_input.toPlainText()
 
-    # Strip stock info from display name
     if ' (Stock:' in item_name:
         item_name = item_name.split(' (Stock:')[0]
 
@@ -143,7 +112,6 @@ def _on_submit(view_instance):
 
 
 def load_damage_item_combo(view_instance, items):
-    """Populate item combo box with current inventory items"""
     if not hasattr(view_instance, 'damage_item_combo'):
         return
     view_instance.damage_item_combo.clear()
@@ -155,7 +123,6 @@ def load_damage_item_combo(view_instance, items):
 
 
 def populate_damage_table(view_instance, reports):
-    """Populate damage reports table with data"""
     if not hasattr(view_instance, 'damage_table'):
         return
     view_instance.damage_table.setRowCount(0)
@@ -177,7 +144,6 @@ def populate_damage_table(view_instance, reports):
 
 
 def clear_damage_form(view_instance):
-    """Reset the damage report form after submission"""
     if hasattr(view_instance, 'damage_item_combo'):
         view_instance.damage_item_combo.setCurrentIndex(0)
     if hasattr(view_instance, 'damage_qty_spin'):

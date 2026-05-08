@@ -1,7 +1,6 @@
 """
 Supplier Management System - Controller
 Handles ALL supplier, order, and approval database operations.
-NO QMessageBox imports.
 """
 
 from model.supplier_model import Supplier, StockRequest
@@ -107,7 +106,7 @@ class SupplierController:
             return Supplier.from_dict(row)
         return None
 
-    def get_active_suppliers(self):
+    def get_active_suppliers_static(self):
         db = self._get_connection()
         db.cursor.execute("SELECT id, name FROM suppliers WHERE status = 'active' ORDER BY name")
         rows = db.cursor.fetchall()
@@ -144,29 +143,6 @@ class SupplierController:
         return request_id
 
     def get_all_stock_requests(self):
-        db = self._get_connection()
-        db.cursor.execute("""
-            SELECT sr.*, i.name as item_name, i.category as item_category
-            FROM stock_requests sr
-            JOIN items i ON sr.item_id = i.id
-            ORDER BY sr.request_date DESC
-        """)
-        rows = db.cursor.fetchall()
-        db.disconnect()
-        requests = []
-        for row in rows:
-            if row.get('reason') is None:
-                row['reason'] = ""
-            if row.get('item_name') is None:
-                row['item_name'] = "Unknown Item"
-            if row.get('item_category') is None:
-                row['item_category'] = "Unknown"
-            if row.get('notes') is None:
-                row['notes'] = ""
-            requests.append(StockRequest.from_dict(row))
-        return requests
-
-    def get_pending_approvals(self):
         db = self._get_connection()
         db.cursor.execute("""
             SELECT sr.*, i.name as item_name, i.category as item_category
@@ -277,56 +253,8 @@ class SupplierController:
         pass
 
     @staticmethod
-    def get_active_suppliers():
-        """
-        Fetch active suppliers for populating dropdowns in dialogs.
-        Returns list of {'id', 'name'} dicts, or empty list on error.
-        """
-        try:
-            from model.database import DatabaseHandler
-            db_config = {
-                'host': 'localhost',
-                'database': 'inventoria_db',
-                'user': 'root',
-                'password': '',
-                'port': 3308
-            }
-            db = DatabaseHandler(**db_config)
-            if not db.connect():
-                return []
-            db.cursor.execute("SELECT id, name FROM suppliers WHERE status = 'active' ORDER BY name")
-            suppliers = db.cursor.fetchall()
-            db.disconnect()
-            return [{'id': s['id'], 'name': s['name']} for s in suppliers]
-        except Exception as e:
-            print(f"SupplierController.get_active_suppliers error: {e}")
-            return []
-
-    @staticmethod
     def get_status_color(status: str) -> str:
         return SupplierController.STATUS_COLORS.get(status.upper(), '#95A5A6')
-
-    @staticmethod
-    def get_active_suppliers_static():
-        try:
-            from model.database import DatabaseHandler
-            db_config = {
-                'host': 'localhost',
-                'database': 'inventoria_db',
-                'user': 'root',
-                'password': '',
-                'port': 3308
-            }
-            db = DatabaseHandler(**db_config)
-            if not db.connect():
-                return []
-            db.cursor.execute("SELECT id, name FROM suppliers WHERE status = 'active' ORDER BY name")
-            suppliers = db.cursor.fetchall()
-            db.disconnect()
-            return [{'id': s['id'], 'name': s['name']} for s in suppliers]
-        except Exception as e:
-            print(f"SupplierController.get_active_suppliers error: {e}")
-            return []
 
     @staticmethod
     def build_order_details_html(order: dict, items: list, supplier: dict) -> str:
@@ -351,9 +279,6 @@ class SupplierController:
             th {{ background-color: #f2f2f2; padding: 8px; border: 1px solid #ddd; text-align: left; }}
             td {{ padding: 8px; border: 1px solid #ddd; }}
             .total-row {{ background-color: #e8f4fd; font-weight: bold; }}
-            .status-ordered {{ color: #3498DB; }}
-            .status-delivered {{ color: #27AE60; }}
-            .status-cancelled {{ color: #E74C3C; }}
         </style>
         </head>
         <body>
@@ -365,7 +290,7 @@ class SupplierController:
             <p><span class="label">Email:</span> <span class="value">{supplier_email}</span></p>
             <p><span class="label">Order Date:</span> <span class="value">{order_date}</span></p>
             <p><span class="label">Expected Delivery:</span> <span class="value">{expected_date}</span></p>
-            <p><span class="label">Status:</span> <span class="value status-{order['status']}"><b>{order['status'].upper()}</b></span></p>
+            <p><span class="label">Status:</span> <span class="value"><b>{order['status'].upper()}</b></span></p>
             <p><span class="label">Created By:</span> <span class="value">{order['created_by']}</span></p>
             <p><span class="label">Notes:</span> <span class="value">{order['notes'] or 'None'}</span></p>
         </div>

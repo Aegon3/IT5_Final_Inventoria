@@ -20,7 +20,6 @@ from view.kpi_dashboard import KPIDashboard
 class InventoryView(QMainWindow):
     """Main view class for inventory system"""
 
-    # Signals
     add_item_signal = pyqtSignal(dict)
     edit_item_signal = pyqtSignal(str, dict)
     delete_item_signal = pyqtSignal(str)
@@ -41,7 +40,7 @@ class InventoryView(QMainWindow):
     activity_log_page_signal = pyqtSignal(int)
     damage_report_signal = pyqtSignal(int, str, int, str)
     stock_issuance_signal = pyqtSignal(int, str, int, str)
-    generate_report_signal = pyqtSignal()  # <-- ADD THIS LINE
+    generate_report_signal = pyqtSignal()
 
     def __init__(self, user_role="staff", username="User", order_controller=None):
         super().__init__()
@@ -727,8 +726,6 @@ class InventoryView(QMainWindow):
 
         return tab
 
-    # ==================== TABLE POPULATION METHODS ====================
-
     def populate_inventory_table(self, items):
         self.inventory_table.setRowCount(0)
         for item in items:
@@ -797,16 +794,10 @@ class InventoryView(QMainWindow):
                 self.inventory_table.setColumnWidth(8, 120)
 
             if item.is_low_stock:
-                if self.user_role == "admin":
-                    for col in range(8):
-                        table_item = self.inventory_table.item(row, col)
-                        if table_item:
-                            table_item.setBackground(QColor(255, 252, 252))
-                else:
-                    for col in range(8):
-                        table_item = self.inventory_table.item(row, col)
-                        if table_item:
-                            table_item.setBackground(QColor(255, 252, 252))
+                for col in range(8):
+                    table_item = self.inventory_table.item(row, col)
+                    if table_item:
+                        table_item.setBackground(QColor(255, 252, 252))
 
     def populate_low_stock_table(self, items):
         if not hasattr(self, 'low_stock_table'):
@@ -1066,8 +1057,6 @@ class InventoryView(QMainWindow):
                 status_item.setBackground(QColor('#FEF3C7'))
             self.my_requests_table.setItem(row, 6, status_item)
 
-    # ==================== DISPLAY METHODS ====================
-
     def display_statistics(self, stats):
         if hasattr(self, 'kpi_dashboard'):
             self.kpi_dashboard.update_kpis(stats)
@@ -1088,8 +1077,6 @@ class InventoryView(QMainWindow):
         self.activity_prev_btn.setEnabled(current_page > 1)
         self.activity_next_btn.setEnabled(current_page < total_pages)
 
-    # ==================== GETTER METHODS ====================
-
     def get_search_text(self):
         return self.search_input.text()
 
@@ -1101,8 +1088,6 @@ class InventoryView(QMainWindow):
 
     def get_user_role(self):
         return self.user_role
-
-    # ==================== BUTTON HANDLERS ====================
 
     def _on_add_item_clicked(self):
         from view.dialogs import InventoryDialog
@@ -1239,8 +1224,6 @@ class InventoryView(QMainWindow):
     def _on_activity_next_clicked(self):
         self.activity_log_page_signal.emit(1)
 
-    # ==================== DAMAGE REPORT HELPERS ====================
-
     def load_damage_item_combo(self, items):
         from view.damage_report_view import load_damage_item_combo
         load_damage_item_combo(self, items)
@@ -1253,8 +1236,6 @@ class InventoryView(QMainWindow):
         from view.damage_report_view import clear_damage_form
         clear_damage_form(self)
 
-    # ==================== STOCK ISSUANCE HELPERS ====================
-
     def load_issuance_item_combo(self, items):
         from view.stock_issuance_view import load_issuance_item_combo
         load_issuance_item_combo(self, items)
@@ -1266,8 +1247,6 @@ class InventoryView(QMainWindow):
     def clear_issuance_form(self):
         from view.stock_issuance_view import clear_issuance_form
         clear_issuance_form(self)
-
-    # ==================== MESSAGE HELPERS ====================
 
     def show_message(self, title, message, icon_type="information"):
         icon_map = {

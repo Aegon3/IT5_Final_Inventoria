@@ -14,6 +14,8 @@ class DamageReportController:
         self.view = view
         self.db_config = db_config
         self.username = username
+        self.db = DatabaseHandler(**db_config)
+        self.db.connect()
 
         self._create_table()
         self.view.damage_report_signal.connect(self.handle_submit_report)
@@ -64,6 +66,19 @@ class DamageReportController:
         db.disconnect()
         return [DamageReport.from_dict(r) for r in rows]
 
+    def get_inventory_items(self):
+        """Fetch inventory items directly from database"""
+        self.db.cursor.execute("SELECT id, name, quantity FROM items ORDER BY name")
+        rows = self.db.cursor.fetchall()
+
+        class TempItem:
+            def __init__(self, id, name, quantity):
+                self.id = id
+                self.name = name
+                self.quantity = quantity
+
+        return [TempItem(row['id'], row['name'], row['quantity']) for row in rows]
+
     def handle_submit_report(self, item_id, item_name, quantity, reason):
         if not item_id:
             self.view.show_message("Warning", "Please select an item.", "warning")
@@ -93,13 +108,16 @@ class DamageReportController:
             )
             self.view.clear_damage_form()
             self.refresh_reports()
+            self.refresh_item_list()
         else:
             self.view.show_message("Error", "Failed to submit damage report.", "critical")
 
     def refresh_item_list(self):
-        items = self.inventory_model.get_filtered_items()
+        """Load inventory items into the damage report item dropdown"""
+        items = self.get_inventory_items()
         self.view.load_damage_item_combo(items)
 
     def refresh_reports(self):
+        """Load damage reports into the damage report table"""
         reports = self.get_all_reports()
         self.view.populate_damage_table(reports)

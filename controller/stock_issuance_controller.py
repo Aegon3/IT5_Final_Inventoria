@@ -14,6 +14,8 @@ class StockIssuanceController:
         self.view = view
         self.db_config = db_config
         self.username = username
+        self.db = DatabaseHandler(**db_config)
+        self.db.connect()
 
         self._create_table()
         self.view.stock_issuance_signal.connect(self.handle_issue_stock)
@@ -65,22 +67,30 @@ class StockIssuanceController:
         return [StockIssuance.from_dict(r) for r in rows]
 
     def get_current_stock(self, item_id):
-        db = self._get_connection()
-        db.cursor.execute("SELECT quantity FROM items WHERE id = %s", (item_id,))
-        row = db.cursor.fetchone()
-        db.disconnect()
+        self.db.cursor.execute("SELECT quantity FROM items WHERE id = %s", (item_id,))
+        row = self.db.cursor.fetchone()
         return row['quantity'] if row else 0
 
     def deduct_stock(self, item_id, quantity):
-        db = self._get_connection()
-        db.cursor.execute(
+        self.db.cursor.execute(
             "UPDATE items SET quantity = quantity - %s WHERE id = %s AND quantity >= %s",
             (quantity, item_id, quantity)
         )
-        db.conn.commit()
-        success = db.cursor.rowcount > 0
-        db.disconnect()
-        return success
+        self.db.conn.commit()
+        return self.db.cursor.rowcount > 0
+
+    def get_inventory_items(self):
+        """Fetch inventory items directly from database"""
+        self.db.cursor.execute("SELECT id, name, quantity FROM items ORDER BY name")
+        rows = self.db.cursor.fetchall()
+
+        class TempItem:
+            def __init__(self, id, name, quantity):
+                self.id = id
+                self.name = name
+                self.quantity = quantity
+
+        return [TempItem(row['id'], row['name'], row['quantity']) for row in rows]
 
     def handle_issue_stock(self, item_id, item_name, quantity, notes):
         if not item_id:
@@ -128,9 +138,11 @@ class StockIssuanceController:
             self.view.show_message("Error", "Failed to record issuance.", "critical")
 
     def refresh_item_list(self):
-        items = self.inventory_model.get_filtered_items()
+        """Load inventory items into the issuance item dropdown"""
+        items = self.get_inventory_items()
         self.view.load_issuance_item_combo(items)
 
     def refresh_issuances(self):
+        """Load issuance records into the issuance table"""
         issuances = self.get_all_issuances()
         self.view.populate_issuance_table(issuances)

@@ -1,17 +1,14 @@
 """
 Inventory Management System - Controller with Logout / Login Loop
 NO QMessageBox imports - All UI alerts delegated to view.
+NO direct view imports - Only imports from model.
 """
-
-from view.login import LoginWindow
-from model import InventoryModel
-from view import InventoryView
 
 
 class InventoryControllerWithLogout:
     """Controller that supports logout and login loop"""
 
-    def __init__(self, model: InventoryModel, view: InventoryView, db_config: dict):
+    def __init__(self, model, view, db_config: dict):
         self.model = model
         self.view = view
         self.db_config = db_config
@@ -118,26 +115,17 @@ class InventoryControllerWithLogout:
         self.update_inventory_table()
 
     def handle_logout(self):
+        """Emit logout request to view - view handles the actual logout UI"""
+        # Just emit the signal, let the main.py handle the actual logout flow
+        # This way controller doesn't need to import view classes
         reply = self.view.confirm_action("Logout Confirmation", "Are you sure you want to logout?")
         if reply:
             self.cleanup()
-            self.view.close()
-
-            login_window = LoginWindow(self.db_config)
-            if login_window.exec():
-                if login_window.is_authenticated():
-                    user = login_window.get_username()
-                    user_data = login_window.get_user_data()
-
-                    model = InventoryModel(self.db_config)
-                    view = InventoryView()
-                    view.setWindowTitle(f"Inventoria - {user} ({user_data['role']})")
-                    controller = InventoryControllerWithLogout(model, view, self.db_config)
-                    model.load_sample_data()
-                    view.show()
+            # Signal to main.py that logout was confirmed
+            if hasattr(self.view, 'logout_confirmed'):
+                self.view.logout_confirmed.emit()
             else:
-                import sys
-                sys.exit(0)
+                self.view.close()
 
     def cleanup(self):
         try:
